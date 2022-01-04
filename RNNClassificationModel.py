@@ -3,6 +3,7 @@ import numpy as np
 import tensorflow as tf
 from sklearn.model_selection import train_test_split
 from tensorflow.python.keras.layers import Dropout
+import matplotlib.pyplot as plt
 
 
 
@@ -132,5 +133,7 @@ test_loss, test_acc = model.evaluate(x_testset, y_testlabels)
 print("\nTEST PERFORMANCE ")
 print('Test Loss: {}'.format(test_loss))
 print('Test Accuracy: {}'.format(test_acc))
+
+
 
 
