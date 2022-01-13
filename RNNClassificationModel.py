@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import tensorflow as tf
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay, plot_confusion_matrix
 from sklearn.model_selection import train_test_split
 from tensorflow.python.keras.layers import Dropout
 import matplotlib.pyplot as plt
@@ -88,7 +89,6 @@ model.add(tf.keras.layers.Bidirectional(tf.keras.layers.LSTM(32)))
 # vector to final output form for classification result
 model.add(tf.keras.layers.Dense(64, activation='relu'))
 
-#
 model.add(Dropout(0.2))
 
 model.add(tf.keras.layers.Dense(1))
@@ -101,10 +101,28 @@ model.compile(loss=tf.keras.losses.BinaryCrossentropy(from_logits=True),
               optimizer='adam',
               metrics=['accuracy'])
 
+countlabel_0 = len([label for label in y_traininglabels if label == 0])
+countlabel_1 = len([label for label in y_traininglabels if label == 1])
+countalllabels = len(y_traininglabels)
+
+print (countlabel_0, countlabel_1, countalllabels)
+
+ratio_0 = countlabel_0/countalllabels
+ratio_1 = countlabel_1/countalllabels
+
+print("Ratio of label 0 in training data:", ratio_0)
+print("Ratio of label 1 in training data:", ratio_1)
+
+# Optional dictionary mapping class indices (integers) to a weight (float) value, used for weighting the loss function
+# (during training only). This can be useful to tell the model to "pay more attention" to samples from an under-represented class.
+class_weight = {0: ratio_1, 1: ratio_0}
+print("Class weight to fix imbalance:", class_weight)
+
 # Train model
 history = model.fit(x_trainingset,
                     y_traininglabels,
-                    epochs=40, batch_size=16,
+                    class_weight=class_weight,
+                    epochs=10, batch_size=16,
                     validation_data=(x_testset, y_testlabels),
                     validation_steps=30)
 
@@ -122,7 +140,7 @@ comment = ('Zurück nach Kabul mit den rapefugees.')
 predictions = model.predict(np.array([comment]))
 print(predictions[0])
 
-if predictions >= 0.0:
+if predictions > 0.5:
     print("Hate-speech")
 else:
     print("Non-Hate-speech")
@@ -133,7 +151,53 @@ test_loss, test_acc = model.evaluate(x_testset, y_testlabels)
 print("\nTEST PERFORMANCE ")
 print('Test Loss: {}'.format(test_loss))
 print('Test Accuracy: {}'.format(test_acc))
+print()
 
 
+predicted = np.where(model.predict(x_testset).flatten() >= 0.5, 1, 0)
+actual = np.where(y_testlabels >= 0.5, 1, 0)
+
+# True pos = (1,1), True neg = (0,0), False pos = (1,0), False neg = (0,1)
+TP = np.count_nonzero(predicted * actual)
+TN = np.count_nonzero((predicted - 1) * (actual - 1))
+FP = np.count_nonzero(predicted * (actual - 1))
+FN = np.count_nonzero((predicted - 1) * actual)
+
+print("TP", TP)
+print("TN", TN)
+print("FP", FP)
+print("FN", FN)
+
+# oder mit sklearn.metrics.confusion_matrix
+#cm = confusion_matrix(y_true=actual, y_pred=predicted)
+#print(cm)
+
+#disp = ConfusionMatrixDisplay(cm)
+#plt.plot(disp)
+#plt.show()
+
+# accuracy, precision, recall, f1
+print()
+if (TP + FN + TN + FP) != 0:
+    accuracy = TP + TN / (TP + FN + TN + FP)
+else:
+    accuracy = None
+if TP + FP != 0:
+    precision = TP / (TP + FP)
+else:
+    precision = None
+if TP + FN != 0:
+    recall = TP / (TP + FN)
+else:
+    recall = None
+if precision != None and recall != None and precision + recall != 0:
+    f1 = 2 * precision * recall / (precision + recall)
+else:
+    f1 = None
+
+print("Accuracy", accuracy)
+print("Precision", precision)
+print("Recall", recall)
+print("F1-Measure", f1)
 
 
