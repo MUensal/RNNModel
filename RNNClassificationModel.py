@@ -5,23 +5,26 @@ from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay, plot_confu
 from sklearn.model_selection import train_test_split
 from tensorflow.python.keras.layers import Dropout
 import matplotlib.pyplot as plt
+import seaborn as sns
 
-
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+tf.get_logger().setLevel('INFO')
 
 print("tensorflow version: " + tf.__version__ + "\n")
 
 # Reading csv_file: skips header, separation with delimiter, encoding needs to be set here
 df = pd.read_csv(r'Data_prepared.csv',
                  encoding='ISO-8859-1',
-                         engine='python',
-                         delimiter=';', header=0)
+                 engine='python',
+                 delimiter=';', header=0)
 # print(df.shape)
 
 print(df.head())
 # print(df.info)
 
 # example text and label
-print('\ntext: ' + df.iloc[0, 0] + '\nlabel: ' + df.iloc[0, 1]+ '\n')
+print('\ntext: ' + df.iloc[0, 0] + '\nlabel: ' + df.iloc[0, 1] + '\n')
 
 # renaming the column hof_OR_none to labels, inplace updates original object
 df.rename(columns={'hof_OR_none': 'labels'}, inplace=True)
@@ -54,10 +57,12 @@ VOCAB_SIZE = 1000
 encoder = tf.keras.layers.experimental.preprocessing.TextVectorization(max_tokens=VOCAB_SIZE)
 encoder.adapt(x)
 
+
 # function to get tokens in vocabulary
 def _get_vocabulary():
     keys, values = encoder._index_lookup_layer._table_handler.data()
     return [x.decode('ISO-8859-1', errors='ignore') for _, x in sorted(zip(values, keys))]
+
 
 # print first 30 tokens
 print('\nFirst 30 tokens in vocabulary:\n')
@@ -105,10 +110,10 @@ countlabel_0 = len([label for label in y_traininglabels if label == 0])
 countlabel_1 = len([label for label in y_traininglabels if label == 1])
 countalllabels = len(y_traininglabels)
 
-print (countlabel_0, countlabel_1, countalllabels)
+print(countlabel_0, countlabel_1, countalllabels)
 
-ratio_0 = countlabel_0/countalllabels
-ratio_1 = countlabel_1/countalllabels
+ratio_0 = countlabel_0 / countalllabels
+ratio_1 = countlabel_1 / countalllabels
 
 print("Ratio of label 0 in training data:", ratio_0)
 print("Ratio of label 1 in training data:", ratio_1)
@@ -125,7 +130,6 @@ history = model.fit(x_trainingset,
                     epochs=10, batch_size=16,
                     validation_data=(x_testset, y_testlabels),
                     validation_steps=30)
-
 
 print(model.summary())
 print()
@@ -153,7 +157,6 @@ print('Test Loss: {}'.format(test_loss))
 print('Test Accuracy: {}'.format(test_acc))
 print()
 
-
 predicted = np.where(model.predict(x_testset).flatten() >= 0.5, 1, 0)
 actual = np.where(y_testlabels >= 0.5, 1, 0)
 
@@ -169,12 +172,12 @@ print("FP", FP)
 print("FN", FN)
 
 # oder mit sklearn.metrics.confusion_matrix
-#cm = confusion_matrix(y_true=actual, y_pred=predicted)
-#print(cm)
+# cm = confusion_matrix(y_true=actual, y_pred=predicted)
+# print(cm)
 
-#disp = ConfusionMatrixDisplay(cm)
-#plt.plot(disp)
-#plt.show()
+# disp = ConfusionMatrixDisplay(cm)
+# plt.plot(disp)
+# plt.show()
 
 # accuracy, precision, recall, f1
 print()
@@ -195,9 +198,24 @@ if precision != None and recall != None and precision + recall != 0:
 else:
     f1 = None
 
+print("-------RESULTS --------")
 print("Accuracy", accuracy)
 print("Precision", precision)
 print("Recall", recall)
 print("F1-Measure", f1)
+print("------------------------")
 
 
+# plot_metrics()
+
+def plot_cm(labels, predictions, p=0.5):
+    cm = confusion_matrix(labels, predictions > p)
+    plt.figure(figsize=(5, 5))
+    sns.heatmap(cm, annot=True, fmt="d")
+    plt.title('Confusion matrix @{:.2f}'.format(p))
+    plt.ylabel('Actual label')
+    plt.xlabel('Predicted label')
+    plt.show()
+
+
+plot_cm(actual, predicted)
