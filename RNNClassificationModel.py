@@ -20,6 +20,7 @@ df = pd.read_csv(r'Data_prepared.csv',
                  delimiter=';', header=0)
 # print(df.shape)
 
+print("\n Data sample")
 print(df.head())
 # print(df.info)
 
@@ -65,13 +66,14 @@ def _get_vocabulary():
 
 
 # print first 30 tokens
+print("----------------------------------------")
 print('\nFirst 30 tokens in vocabulary:\n')
 vocab = np.array(_get_vocabulary())
 print(vocab[:30])
 print()
 
 # print first 3 examples that will be encoded
-example = x[2:3]
+example = x[:3]
 print(example)
 
 # encoded examples
@@ -99,9 +101,11 @@ model.add(Dropout(0.2))
 model.add(tf.keras.layers.Dense(1))
 
 # Masking for missing inputs is done after Embedding layer
-print([layer.supports_masking for layer in model.layers])
+# print([layer.supports_masking for layer in model.layers])
 
 # Compiling model - loss function= BinaryCrossentropy, Optimizer = Adam
+print("----------------------------------------")
+print("\n\n..................compiling model")
 model.compile(loss=tf.keras.losses.BinaryCrossentropy(from_logits=True),
               optimizer='adam',
               metrics=['accuracy'])
@@ -110,44 +114,40 @@ countlabel_0 = len([label for label in y_traininglabels if label == 0])
 countlabel_1 = len([label for label in y_traininglabels if label == 1])
 countalllabels = len(y_traininglabels)
 
-print(countlabel_0, countlabel_1, countalllabels)
+print("----------------------------------------")
+print("\nLabel frequencies")
+print("Zero labels: ", countlabel_0)
+print("One labels: ", countlabel_1)
+print("All labels: ", countalllabels)
 
 ratio_0 = countlabel_0 / countalllabels
 ratio_1 = countlabel_1 / countalllabels
 
-print("Ratio of label 0 in training data:", ratio_0)
+print("\n--- Class ratios ---")
+print("\nRatio of label 0 in training data:", ratio_0)
 print("Ratio of label 1 in training data:", ratio_1)
 
 # Optional dictionary mapping class indices (integers) to a weight (float) value, used for weighting the loss function
 # (during training only). This can be useful to tell the model to "pay more attention" to samples from an under-represented class.
 class_weight = {0: ratio_1, 1: ratio_0}
-print("Class weight to fix imbalance:", class_weight)
+print("\nClass weight to fix imbalance:", class_weight)
 
 # Train model
+print("\n------------------------------------------------------------------")
+print("...................training model")
 history = model.fit(x_trainingset,
                     y_traininglabels,
                     class_weight=class_weight,
-                    epochs=10, batch_size=16,
+                    epochs=4, batch_size=16,
                     validation_data=(x_testset, y_testlabels),
                     validation_steps=30)
 
+
+print()
 print(model.summary())
 print()
 
 # Python3 code to print all encodings available
-
-# --- Testing ---
-
-# example prediction
-comment = ('Zurück nach Kabul mit den rapefugees.')
-
-predictions = model.predict(np.array([comment]))
-print(predictions[0])
-
-if predictions > 0.5:
-    print("Hate-speech")
-else:
-    print("Non-Hate-speech")
 
 # model evaluation
 test_loss, test_acc = model.evaluate(x_testset, y_testlabels)
@@ -157,8 +157,20 @@ print('Test Loss: {}'.format(test_loss))
 print('Test Accuracy: {}'.format(test_acc))
 print()
 
+#-------------- PLOT functions --------------
+
+
+def plot_graphs(history, metric):
+  plt.plot(history.history[metric])
+  plt.plot(history.history['val_'+metric], '')
+  plt.xlabel("Epochs")
+  plt.ylabel(metric)
+  plt.legend([metric, 'val_'+metric])
+
+#------------------------------------------------
+
 predicted = np.where(model.predict(x_testset).flatten() >= 0.5, 1, 0)
-actual = np.where(y_testlabels >= 0.5, 1, 0)
+actual = np.where(y_testlabels)
 
 # True pos = (1,1), True neg = (0,0), False pos = (1,0), False neg = (0,1)
 TP = np.count_nonzero(predicted * actual)
@@ -166,10 +178,10 @@ TN = np.count_nonzero((predicted - 1) * (actual - 1))
 FP = np.count_nonzero(predicted * (actual - 1))
 FN = np.count_nonzero((predicted - 1) * actual)
 
-print("TP", TP)
-print("TN", TN)
-print("FP", FP)
-print("FN", FN)
+print("True Positives", TP)
+print("True Negatives", TN)
+print("False Positives", FP)
+print("False Negatives", FN)
 
 # oder mit sklearn.metrics.confusion_matrix
 # cm = confusion_matrix(y_true=actual, y_pred=predicted)
@@ -203,11 +215,12 @@ print("Accuracy", accuracy)
 print("Precision", precision)
 print("Recall", recall)
 print("F1-Measure", f1)
-print("------------------------")
+print()
 
 
 # plot_metrics()
 
+# function for confusion matrix
 def plot_cm(labels, predictions, p=0.5):
     cm = confusion_matrix(labels, predictions > p)
     plt.figure(figsize=(5, 5))
@@ -217,5 +230,52 @@ def plot_cm(labels, predictions, p=0.5):
     plt.xlabel('Predicted label')
     plt.show()
 
-
+# plot confusionmatrix
 plot_cm(actual, predicted)
+
+
+plt.figure(figsize=(16, 8))
+plt.subplot(1, 2, 1)
+plot_graphs(history, 'accuracy')
+plt.ylim(None, 1)
+plt.subplot(1, 2, 2)
+plot_graphs(history, 'loss')
+plt.ylim(0, None)
+plt.show()
+
+# --- Testing ---
+print(" --------- Testing classification. ---------")
+
+
+# classification function
+def classify_comment(comment):
+    prediction = model.predict(np.array([comment]))
+    print(prediction[0])
+    if prediction > 0.5:
+        print("Hate-speech")
+    else:
+        print("Non-Hate-speech")
+
+# pick random comments from testset
+# print(x_testset[1:4])
+# print(x_testset.shape)
+
+index1 = np.random.choice(x_testset.shape[0], 1, replace=False)
+c1 = x_testset[index1]
+index2 = np.random.choice(x_testset.shape[0], 1, replace=False)
+c2 = x_testset[index2]
+index3 = np.random.choice(x_testset.shape[0], 1, replace=False)
+c3 = x_testset[index3]
+
+
+
+
+print("Comment 1: ", c1)
+classify_comment(c1)
+print()
+print("Comment 2: ", c2)
+classify_comment(c2)
+print()
+print("Comment 3: ", c3)
+classify_comment(c3)
+
