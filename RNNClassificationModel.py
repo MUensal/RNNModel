@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 import os
+
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 tf.get_logger().setLevel('INFO')
 
@@ -138,10 +139,9 @@ print("...................training model")
 history = model.fit(x_trainingset,
                     y_traininglabels,
                     class_weight=class_weight,
-                    epochs=4, batch_size=16,
+                    epochs=10, batch_size=16,
                     validation_data=(x_testset, y_testlabels),
                     validation_steps=30)
-
 
 print()
 print(model.summary())
@@ -157,20 +157,8 @@ print('Test Loss: {}'.format(test_loss))
 print('Test Accuracy: {}'.format(test_acc))
 print()
 
-#-------------- PLOT functions --------------
-
-
-def plot_graphs(history, metric):
-  plt.plot(history.history[metric])
-  plt.plot(history.history['val_'+metric], '')
-  plt.xlabel("Epochs")
-  plt.ylabel(metric)
-  plt.legend([metric, 'val_'+metric])
-
-#------------------------------------------------
-
 predicted = np.where(model.predict(x_testset).flatten() >= 0.5, 1, 0)
-actual = np.where(y_testlabels)
+actual = np.where(y_testlabels >= 0.5, 1, 0)
 
 # True pos = (1,1), True neg = (0,0), False pos = (1,0), False neg = (0,1)
 TP = np.count_nonzero(predicted * actual)
@@ -230,18 +218,9 @@ def plot_cm(labels, predictions, p=0.5):
     plt.xlabel('Predicted label')
     plt.show()
 
+
 # plot confusionmatrix
 plot_cm(actual, predicted)
-
-
-plt.figure(figsize=(16, 8))
-plt.subplot(1, 2, 1)
-plot_graphs(history, 'accuracy')
-plt.ylim(None, 1)
-plt.subplot(1, 2, 2)
-plot_graphs(history, 'loss')
-plt.ylim(0, None)
-plt.show()
 
 # --- Testing ---
 print(" --------- Testing classification. ---------")
@@ -256,6 +235,7 @@ def classify_comment(comment):
     else:
         print("Non-Hate-speech")
 
+
 # pick random comments from testset
 # print(x_testset[1:4])
 # print(x_testset.shape)
@@ -267,15 +247,20 @@ c2 = x_testset[index2]
 index3 = np.random.choice(x_testset.shape[0], 1, replace=False)
 c3 = x_testset[index3]
 
+# Comments from BERT Model
+comm_line56 = 'fastenbrechen--fressen und leben wie gott in schland???? '
+comm_line99 = 'realjohr na, jetzt greifen die honks, unter der führung ihrer braunen hetz- und hass- schachtel an und ' \
+              'kommen aus ihren rechtsversifften ecken. wenn dann noch die dummheit der flatrate-nazis in der ' \
+              'dauerschleife des hasses und der hetze aufgeht, haben si'
+comm_line163 = 'gott bewahre es ist noch nicht für rebecca vorbei, denn dann ist\'s aus mit der berliner polizei. ' \
+               'die berliner polizei muss und sollte freund &amp; helfer von rebecca sein, und kein solches ' \
+               'schwager-schw… ??    findbecci, sucht nach einer lebenden rebecca'
 
-
-
-print("Comment 1: ", c1)
-classify_comment(c1)
+print("Comment 1: ", comm_line56)
+classify_comment(comm_line56)
 print()
-print("Comment 2: ", c2)
-classify_comment(c2)
+print("Comment 2: ", comm_line99)
+classify_comment(comm_line99)
 print()
-print("Comment 3: ", c3)
-classify_comment(c3)
-
+print("Comment 3: ", comm_line163)
+classify_comment(comm_line163)
