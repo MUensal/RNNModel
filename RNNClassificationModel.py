@@ -139,7 +139,7 @@ print("...................training model")
 history = model.fit(x_trainingset,
                     y_traininglabels,
                     class_weight=class_weight,
-                    epochs=10, batch_size=16,
+                    epochs=40, batch_size=16,
                     validation_data=(x_testset, y_testlabels),
                     validation_steps=30)
 
