@@ -248,13 +248,15 @@ index3 = np.random.choice(x_testset.shape[0], 1, replace=False)
 c3 = x_testset[index3]
 
 # Comments from BERT Model
-comm_line56 = 'fastenbrechen--fressen und leben wie gott in schland???? '
+comm_line56 = 'Bei einem Grillfest von Pro Chemnitz verbot die Polizei den Teilnehmern aus Rücksicht ' \
+              'gegenüber Islamisten  ein ganzes Spanferkel zu grillen .  Nach dem Protestgrillen ' \
+              'gegen das Zuckerfest wurden zwei Teilnehmer von 2 Syriern mit einem Messer attackiert.'
+
 comm_line99 = 'realjohr na, jetzt greifen die honks, unter der führung ihrer braunen hetz- und hass- schachtel an und ' \
               'kommen aus ihren rechtsversifften ecken. wenn dann noch die dummheit der flatrate-nazis in der ' \
               'dauerschleife des hasses und der hetze aufgeht, haben si'
-comm_line163 = 'gott bewahre es ist noch nicht für rebecca vorbei, denn dann ist\'s aus mit der berliner polizei. ' \
-               'die berliner polizei muss und sollte freund &amp; helfer von rebecca sein, und kein solches ' \
-               'schwager-schw… ??    findbecci, sucht nach einer lebenden rebecca'
+
+comm_line163 = 'BlondJedi annewill Mal ehrlich - welche Frau will schon einen Schwarzafrikaner? Frau Anne Will bestimmt auch nicht!'
 
 print("Comment 1: ", comm_line56)
 classify_comment(comm_line56)
